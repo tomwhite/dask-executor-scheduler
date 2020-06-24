@@ -16,6 +16,10 @@ For testing, it's useful to use a [ThreadPoolExecutor](https://docs.python.org/3
 
 Have a look in the examples directory to see how to use the scheduler.
 
+### Upstream discussion/implementation
+
+See also [dask#6220](https://github.com/dask/dask/issues/6220) for discussion about including this in Dask; and [dask#6322](https://github.com/dask/dask/pull/6322) for an implementation.
+
 ### Installation
 
 ```bash
