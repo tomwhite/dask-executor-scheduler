@@ -1,0 +1,13 @@
+name: dask_executor_scheduler
+channels:
+  - conda-forge
+dependencies:
+  - python==3.7.1
+  - zarr
+  - pip
+  - pip:
+      - dask[array]
+      - psutil
+      - pytest
+      - git+https://github.com/tomwhite/pywren-ibm-cloud
+      - git+https://github.com/pangeo-data/rechunker

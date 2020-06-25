@@ -26,8 +26,15 @@ See also [dask#6220](https://github.com/dask/dask/issues/6220) for discussion ab
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-pip install .
-pip install -e ../pywren-ibm-cloud
+pip install -e .
+```
+
+Or using Conda (easier to install Zarr):
+
+```bash
+conda env create -f environment.yml 
+conda activate dask_executor_scheduler
+pip install -e .
 ```
 
 ### Running locally
@@ -68,6 +75,62 @@ Run using the Cloud Run executor:
 
 ```bash
 python examples/pywren_cloudrun_executor.py
+```
+
+### Pywren runtimes
+
+The default runtime will be automatically built for you when you first run Pywren. To run examples using Zarr you will need to build a custom conda runtime
+(since zarr installation via pip requires compilation of numcodecs). Note that this requires that https://github.com/tomwhite/pywren-ibm-cloud is checked out in the parent directory).
+
+```bash
+PROJECT_ID=...
+pywren-ibm-cloud runtime build -f ../pywren-ibm-cloud/runtime/cloudrun/Dockerfile.conda37 "$PROJECT_ID/pywren-cloudrun-conda-v37:latest"
+```
+
+You can run this repeatedly to rebuild the runtime. You can create (or update) the Cloud Run function that uses the runtime with
+
+```bash
+pywren-ibm-cloud runtime create "$PROJECT_ID/pywren-cloudrun-conda-v37:latest"
+```
+
+The full docs on runtimes are here: https://github.com/pywren/pywren-ibm-cloud/tree/master/runtime
+
+### Example: Rechunking Zarr files
+
+Rechunking Zarr files is a common, but surprisingly difficult problem to get right. [This thread](https://discourse.pangeo.io/t/best-practices-to-go-from-1000s-of-netcdf-files-to-analyses-on-a-hpc-cluster/588) has an excellent discussion of the problem, and lots of suggested approaches and solutions.
+
+The [rechunker](https://github.com/pangeo-data/rechunker) library is a general purpose solution, and one that is well suited to Pywren, since the Dask graph is small and the IO can be offloaded to the cloud without starting a dedicated Dask cluster.
+
+The examples directory has a few examples of running rechunker on Zarr files using Pywren.
+
+To run it you will need to create a conda runtime as explained in the previous section; and you will need to create a GCS bucket for the Zarr files.
+
+Run everything locally as a test:
+
+```bash
+python examples/rechunk_local_storage_local_compute.py
+```
+
+Run using Cloud storage but with local compute (i.e. no Pywren):
+
+```bash
+PROJECT_ID=...
+BUCKET=...
+python examples/rechunk_cloud_storage_local_compute.py $PROJECT_ID $BUCKET
+```
+
+Delete the files from the bucket using the console, or the util script:
+
+```bash
+python examples/zarr_cloud_util.py $PROJECT_ID $BUCKET
+```
+
+Run using Cloud storage and compute (i.e. with Pywren):
+
+```bash
+PROJECT_ID=...
+BUCKET=...
+python examples/rechunk_cloud_storage_cloud_compute.py $PROJECT_ID $BUCKET
 ```
 
 ### Related projects
