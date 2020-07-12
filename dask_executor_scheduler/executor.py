@@ -1,5 +1,6 @@
 import concurrent.futures
 import dask.array as da
+import dask.core
 import dask.local
 import numpy as np
 from queue import Empty, Queue
@@ -87,8 +88,17 @@ def executor_scheduler(dsk, keys, executor=None, batch_size=4, timeout=1, **kwar
     thread.start()
 
     def apply_batched(func, args=(), kwds={}, callback=None):
-        # Just put the call onto the queue
-        queue.put((func, args, kwds, callback))
+        # func is Dask's execute_task
+        assert func == dask.local.execute_task
+        # Let's find out if it's a runnable task
+        key, task_info, dumps, loads, get_id, pack_exception = args
+        task, data = loads(task_info)
+        if dask.core.istask(task):
+            # Put the call onto the queue to be run by the scheduler
+            queue.put((func, args, kwds, callback))
+        else:
+            # Execute locally since it's not a runnable task
+            dask.local.apply_sync(func, args, kwargs, callback)
 
     kwargs.pop('num_workers', None)    # if num_workers present, remove it
     # num_workers is number of active tasks present at any one time
