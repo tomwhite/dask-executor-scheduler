@@ -1,5 +1,5 @@
 dask[array]
 psutil
 pytest
-git+https://github.com/tomwhite/pywren-ibm-cloud
+git+https://github.com/pywren/pywren-ibm-cloud
 git+https://github.com/pangeo-data/rechunker
